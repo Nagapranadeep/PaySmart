@@ -1,1 +1,16 @@
-{"name":"paysmart-india","version":"1.0.0","private":true,"type":"module","description":"Full-stack Indian wallet sandbox with SQLite, atomic double-entry transfers and external UPI handoff","scripts":{"start":"node server/local.mjs","dev":"node server/local.mjs","build":"node scripts/build.mjs","test":"node --test tests/*.test.mjs"},"engines":{"node":">=24"}}
+{
+  "name": "paysmart-india",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Full-stack Indian wallet sandbox with SQLite, atomic double-entry transfers and external UPI handoff",
+  "scripts": {
+    "start": "node server/local.mjs",
+    "dev": "node server/local.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "node scripts/build.mjs && node --test tests/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
