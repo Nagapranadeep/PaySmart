@@ -1,62 +1,112 @@
 # PaySmart 🇮🇳
 
-A stylish full-stack Indian digital wallet sandbox, built with vanilla JavaScript, a Node.js API, and SQLite. The same API can run on a Cloudflare Worker with D1. No npm dependencies are needed for local development.
+A full-stack Indian payment platform with a dark fintech dashboard, a mobile payment interface, registration and login, durable wallets, a double-entry transaction journal, and real UPI app handoff.
 
-## Run locally
+**Live app:** https://paysmart-india-wallet.rareimpala8.chatgpt.site  
+**Source:** https://github.com/Nagapranadeep/PaySmart
 
-Requires Node.js 24 or later.
+## Start locally
+
+Requires **Node.js 24+**. No npm installation is necessary: the server uses built-in HTTP, Web Crypto, and SQLite modules. QR generation and decoding libraries are vendored with their licenses.
 
 ```bash
 npm start
-# Open http://127.0.0.1:3000
-npm test
+# Visit http://127.0.0.1:3000 and create an account.
 npm run build
+npm test
 ```
 
-The local server creates `data/paysmart.sqlite` automatically. `PORT`, `HOST`, and `PAYSMART_DATA_DIR` configure the server. Local accounts use a random HttpOnly, SameSite=Strict session cookie; retain the cookie to retain access to your sandbox wallet. Each session gets an isolated account. Local sessions are sandbox identities, not bank-grade authentication. Hosted private Sites use platform-injected ChatGPT identity headers instead of trusting client identity fields.
+`PORT`, `HOST`, and `PAYSMART_DATA_DIR` configure the server. The default database is `data/paysmart.sqlite`, excluded from Git. Versioned schema migrations run automatically on local startup. Hosted Sites use Cloudflare D1; the deterministic build produces an ESM Worker with embedded frontend assets.
 
-## Features
+## Product features
 
-- Responsive INR dashboard, transaction search/filtering, receipts and CSV export.
-- Durable wallet accounts, editable profile and merchant registry.
-- Sandbox transfers to `priya@paysmart` and `rahul@paysmart`.
+- Responsive desktop dashboard and mobile navigation, with dark/light themes.
+- Real registration, login and logout; isolated database records per account.
+- Salted PBKDF2-SHA256 password hashes (100,000 iterations), 12-character registration minimum, random session secrets stored only as hashes, seven-day HttpOnly/SameSite=Strict cookies, Secure cookies over HTTPS, expired-session checks, revocation and login throttling.
+- INR formatting, Indian Standard Time, Indian merchants, transaction search/filtering, receipts, CSV export and data-driven charts.
+- Personal sandbox wallet and a private network of sample counterparties.
+- Sandbox wallet transfers to `priya@paysmart` and `rahul@paysmart`.
 - Merchant payments to Swiggy, Amazon India, Starbucks, BigBasket, Zomato and DMart.
-- Simulated top-ups, mobile recharges and bill payments.
-- Sandbox verification code **123456** checked by the server. No real PINs or OTPs are collected.
-- Atomic wallet updates using optimistic database version checks. Both debit and credit, transaction record, refund state and balanced journal are persisted together.
-- Integer paise, positive amount validation, ₹1,00,000 per-transaction and daily outgoing limits, idempotency keys, one-time full merchant refunds, insufficient-balance rejection and per-user data isolation.
-- Backend reports at `/api/reports`; category percentages and month comparisons in the visual dashboard are illustrative.
-- Real UPI ID payment handoff through an encoded `upi://pay` link, stored separately as **Unverified** and excluded from sandbox balances.
+- Simulated bank top-ups, mobile recharges and bill payments.
+- Explicit review and verification screen. Sandbox code: **123456**. Never enter a real OTP or UPI PIN.
+- ₹1–₹1,00,000 per transaction, ₹1,00,000 daily outgoing limit, integer paise, insufficient-balance checks, payload-aware idempotency and one-time full merchant refunds.
+- Atomic persistence of both wallet balances, payment status and balanced journal entries through optimistic SQL version checks. Concurrent HTTP requests and independent worker threads cannot lose updates.
+- UPI payment link creation, camera QR scanning, QR image upload, pasted-link parsing, receive-money QR generation and QR downloads.
 
-## Real UPI payments
+## Real UPI: supported scope
 
-Select **To UPI ID**, enter a recipient and amount, and open the generated link on a phone with a UPI app installed. The UPI app verifies the payee and authorizes any actual payment. PaySmart only validates UPI ID syntax; it cannot establish whether a VPA exists or confirm the payee's identity. Never enter a UPI PIN into PaySmart.
+Select **To UPI ID** or **Scan & pay**, review the recipient and amount, then open the link on a phone with a compatible UPI app. The bank/UPI app authorizes any actual transfer. Desktop users can scan the generated payment QR with their phone.
 
-External payments are **not verified or settled by this project**. Production payment acceptance, payee validation, refunds and reconciliation require merchant onboarding with a regulated payment provider, server-side order creation, provider signature checks and verified webhooks. No client-side “paid” action can credit the wallet. Sandbox refunds affect simulated money only. This project has no payment-provider credentials and makes no live payment or bank API calls.
+PaySmart validates UPI ID syntax and INR amounts. It does **not** verify that a VPA exists or establish recipient identity; users must confirm those in their UPI app. Receive-money QR codes use a real UPI ID supplied by the account holder. The `@paysmart` sample wallet IDs are for internal simulation, not registered live VPAs.
+
+External requests remain **Unverified**, are stored separately, and never change the sandbox wallet balance. Opening an app or clicking a client-side button cannot prove payment success. This is an original educational product, not affiliated with Google Pay, Navi, NPCI or any bank.
+
+Live payment acceptance, account discovery, VPA validation, bank balances, KYC, real refunds, settlement and reconciliation require onboarding with a regulated payment provider and verified server-side callbacks. No provider credentials are configured. The project does not impersonate a bank or collect bank PINs. Password recovery/email delivery is not configured; the help page explains that limitation. Camera scanning requires HTTPS or localhost, camera permission and a capable browser; image upload and manual link entry are alternatives.
+
+## OOP concepts in the running backend
+
+| Concept | Actual implementation |
+| --- | --- |
+| Inheritance | `PersonalAccount`, `MerchantAccount`, `SettlementAccount` extend `WalletAccount`; `MobileRecharge` extends `BillPayment`. |
+| Encapsulation | `WalletAccount.#balance` is private. Only validated debit/credit operations change it. |
+| Abstraction | `PaymentMethod.prepare()` defines the payment-method contract. |
+| Polymorphism | Wallet transfers, merchant payments, bills, top-ups, refunds and UPI handoffs implement different `prepare()` behavior. |
+| Interfaces / contracts | `PaymentProcessor.register()` requires a `PaymentMethod`; SQL store adapters implement the same persistence operations. |
+| Collections | Strategy registry uses `Map`; transaction, external intent and journal collections are persisted per account. |
+| Concurrency / multithreading | Compare-and-swap SQL updates; a test runs real `worker_threads` against one SQLite database. |
+| Exception handling | `DomainError` maps validation/consistency failures to meaningful API errors. |
+| Extensibility | Register a new strategy without changing the payment processor's caller. |
+
+The account aggregate stores its wallets, payment history and journal in one versioned SQL row. Both halves of a transfer commit together, or neither commits. The frontend cannot directly set balances. A rejected version causes a bounded reread/retry with the same idempotency key.
 
 ## API
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
-| GET | `/api/health` | Database API status |
-| GET | `/api/state` | Current account, wallets, history, journal, external intents |
-| GET | `/api/reports` | Balances and ledger consistency report |
-| POST | `/api/profile` | Update display name |
+| POST | `/api/auth/register` | Create account and session |
+| POST | `/api/auth/login` | Verify credentials and start session |
+| GET | `/api/auth/me` | Current authenticated user |
+| POST | `/api/auth/logout` | Revoke current session |
+| GET | `/api/state` | Current user's profile, wallets, history, journal and UPI requests |
+| GET | `/api/reports` | Wallet summaries and ledger balance check |
+| GET | `/api/health` | Authenticated API health |
+| POST | `/api/profile` | Update display name and optional receive UPI ID |
 | POST | `/api/transactions` | Verified sandbox payment/top-up/refund |
-| POST | `/api/upi-intents` | Create external UPI handoff without moving wallet funds |
+| POST | `/api/upi-intents` | External UPI link, without wallet movement |
 
-Payment body: `{ "type": "transfer", "name": "priya@paysmart", "amount": 10000, "key": "unique-request-id", "code": "123456" }`. Amounts are integer paise. Types: `transfer`, `merchant`, `topup`, `recharge`, `bill`, `refund`. Refunds also require `originalId` and the full original amount. Reuse the same key and payload after an uncertain response.
+Example sandbox body:
 
-The account document stores wallets, transaction history and double-entry postings in a single atomically versioned SQL row. It prioritizes consistency for a small project; large-scale usage should normalize records and add pagination, retention, access recovery, rate limiting, operational monitoring, audited authentication/KYC and payment-provider reconciliation.
+```json
+{
+  "type": "transfer",
+  "name": "priya@paysmart",
+  "amount": 10000,
+  "key": "unique-payment-request-id",
+  "code": "123456"
+}
+```
 
-## Project structure
+Amounts are integer paise. Refunds use `type: "refund"`, the original full amount and `originalId`. After an uncertain network response, reuse the same key and payload to prevent duplicate payments.
 
-- `public/`: UI and API client.
-- `server/domain.mjs`: payment rules and journal creation.
-- `server/api.mjs`: shared API and D1 adapter.
-- `server/local.mjs`: Node.js HTTP server and SQLite adapter.
-- `drizzle/`: hosted schema migration.
-- `scripts/build.mjs`: deterministic, dependency-free Worker bundle.
-- `tests/`: domain and database API integration tests.
+## Project map
 
-Opening transaction history is seeded demonstration data. Opening balances represent prior activity and do not derive from the displayed subset; new operations have balanced journal entries. Each authenticated hosted user has an isolated sandbox containing their own sample counterparties.
+```text
+public/           UI, UPI parser, locally vendored QR libraries
+server/models.mjs Account classes, payment methods and strategy registry
+server/domain.mjs Transaction validation and balanced journal creation
+server/auth.mjs   Password hashing, sessions, login throttling
+server/api.mjs    Shared API and D1 account store
+server/local.mjs  Node HTTP server, SQLite store and migrations
+scripts/build.mjs Deterministic standalone Worker build
+drizzle/          Versioned SQL migrations
+tests/            Authentication, wallets, OOP, QR, concurrency and Worker tests
+```
+
+Opening balances and six historical transactions are clearly seeded sandbox data. They represent earlier activity and are not reconstructed from the visible history. New transactions write balanced journal postings. Refunds of seeded historical merchant payments use the sandbox settlement account. Each registered user gets an isolated sample counterparty network; this is not a live person-to-person banking network.
+
+For a production financial service, normalize and paginate large ledgers, add operational monitoring and retention, integrate audited identity/KYC and account recovery, and use a regulated payment provider for real settlement. The existing persistence design is aimed at a small educational project.
+
+### Third-party QR code libraries
+
+- `qrcode-generator` 1.4.4 — Kazuhiko Arase, MIT license.
+- `jsQR` 1.4.0 — Apache-2.0; see `public/vendor/LICENSE-jsQR.txt`.
