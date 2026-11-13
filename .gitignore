@@ -1,0 +1,8 @@
+node_modules/
+data/
+.env*
+.dev.vars*
+.sites-runtime/
+.wrangler/
+outputs/
+*.sqlite*
