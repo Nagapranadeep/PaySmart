@@ -5,6 +5,25 @@ A full-stack Indian payment platform with a dark fintech dashboard, a mobile pay
 **Live app:** https://paysmart-india-wallet.rareimpala8.chatgpt.site  
 **Source:** https://github.com/Nagapranadeep/PaySmart
 
+## Java banking case study 3
+
+The repository also includes a **runnable Java 21 banking module** covering overdrafts, deposits/withdrawals, frozen/closed accounts, atomic transfers, immutable ledger history, reversals, reconciliation, concurrency and crash recovery.
+
+- [Q1–Q5 submission report and coverage matrix](docs/case-study-3/REPORT.md)
+- [UML class, state and sequence diagrams](docs/case-study-3/UML.md)
+- [Java module and run instructions](banking-java/README.md)
+- [Team presentation and contribution template](docs/case-study-3/PRESENTATION.md)
+- [Observed verification results](docs/case-study-3/VERIFICATION.md)
+
+```bash
+npm run test:java
+npm run demo:java
+# Optional persistent account-management CLI:
+bash banking-java/scripts/cli.sh
+```
+
+The existing web frontend/backend remains JavaScript. The assessed Java banking rules run in the separate module; the website does not claim to have banking overdraft/freeze/close controls. Real team-member names and contribution evidence must be completed in the presentation template.
+
 ## Start locally
 
 Requires **Node.js 24+**. No npm installation is necessary: the server uses built-in HTTP, Web Crypto, and SQLite modules. QR generation and decoding libraries are vendored with their licenses.

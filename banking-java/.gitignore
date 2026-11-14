@@ -1,0 +1,4 @@
+work/
+*.class
+*.bank
+*.bank.lock
