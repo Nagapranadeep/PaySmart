@@ -10,9 +10,14 @@
     "build": "node scripts/build.mjs",
     "test": "node scripts/build.mjs && node --test tests/*.test.mjs",
     "test:java": "bash banking-java/scripts/test.sh",
-    "demo:java": "bash banking-java/scripts/demo.sh"
+    "demo:java": "bash banking-java/scripts/demo.sh",
+    "build:vercel": "node scripts/build-vercel.mjs",
+    "db:migrate:vercel": "node scripts/migrate-libsql.mjs"
   },
   "engines": {
     "node": ">=24"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.18.0"
   }
 }

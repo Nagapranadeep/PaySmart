@@ -26,9 +26,10 @@ The existing web frontend/backend remains JavaScript. The assessed Java banking 
 
 ## Start locally
 
-Requires **Node.js 24+**. No npm installation is necessary: the server uses built-in HTTP, Web Crypto, and SQLite modules. QR generation and decoding libraries are vendored with their licenses.
+Requires **Node.js 24+**. The local server uses built-in HTTP, Web Crypto, and SQLite modules. Run `npm ci` to install the remote-database client used by Vercel and its tests. QR generation and decoding libraries are vendored with their licenses.
 
 ```bash
+npm ci
 npm start
 # Visit http://127.0.0.1:3000 and create an account.
 npm run build
@@ -36,6 +37,10 @@ npm test
 ```
 
 `PORT`, `HOST`, and `PAYSMART_DATA_DIR` configure the server. The default database is `data/paysmart.sqlite`, excluded from Git. Versioned schema migrations run automatically on local startup. Hosted Sites use Cloudflare D1; the deterministic build produces an ESM Worker with embedded frontend assets.
+
+## Vercel deployment
+
+The repository includes a Vercel Node.js API adapter with persistent Turso/libSQL storage. See [deployment instructions](docs/VERCEL.md) for the required Vercel account connection, database environment variables and production checks. Deploying requires actual Vercel access; the configuration alone is not a live deployment.
 
 ## Product features
 
