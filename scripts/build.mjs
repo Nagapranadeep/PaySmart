@@ -5,7 +5,7 @@ function collect(dir){return readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.
 const files=Object.fromEntries(collect(resolve(root,'public')).map(path=>['/'+relative(resolve(root,'public'),path).replaceAll('\\','/'),readFileSync(path,'utf8')]));
 files['/']=files['/index.html'];files['/login']=files['/'];files['/register']=files['/'];
 const moduleSource=name=>readFileSync(resolve(root,'server',name),'utf8').replace(/^import .*?;\n/gm,'').replace(/^export \{.*?\} from .*?;\n/gm,'').replaceAll('export ','');
-const modules=['models.mjs','domain.mjs','api.mjs','auth.mjs'].map(moduleSource).join('\n');
+const modules=['models.mjs','banks.mjs','domain.mjs','api.mjs','auth.mjs'].map(moduleSource).join('\n');
 const worker=`${modules}
 const assets=${JSON.stringify(files)};
 export default {async fetch(request,env){

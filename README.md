@@ -57,6 +57,12 @@ The repository includes a Vercel Node.js API adapter with persistent Turso/libSQ
 - Atomic persistence of both wallet balances, payment status and balanced journal entries through optimistic SQL version checks. Concurrent HTTP requests and independent worker threads cannot lose updates.
 - UPI payment link creation, camera QR scanning, QR image upload, pasted-link parsing, receive-money QR generation and QR downloads.
 
+## College-demo bank linking
+
+Choose **My wallets → Add bank** to demonstrate HDFC, SBI or ICICI account linking using the displayed demo OTP **123456**. Select a fictitious savings/current account, set a default, or remove it. Records persist per signed-in user. This does not contact a bank or change wallet funds.
+
+See [the flow, API rules and verification](docs/DEMO-BANK-LINKING.md). No real bank details or OTPs should be entered.
+
 ## Real UPI: supported scope
 
 Select **To UPI ID** or **Scan & pay**, review the recipient and amount, then open the link on a phone with a compatible UPI app. The bank/UPI app authorizes any actual transfer. Desktop users can scan the generated payment QR with their phone.

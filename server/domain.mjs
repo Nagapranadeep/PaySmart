@@ -9,7 +9,7 @@ export function initial(){return {profile:{name:'Arjun Kumar',upi:'arjun@paysmar
 {id:'PS1003',name:'Rahul Verma',handle:'Sent to UPI',amount:150000,type:'transfer',date:'2026-11-11T20:15:00+05:30',status:'Completed',icon:'RV',color:'#e8eff5',counterparty:'rahul'},
 {id:'PS1002',name:'Jio Prepaid',handle:'Mobile recharge',amount:29900,type:'recharge',date:'2026-11-11T10:05:00+05:30',status:'Completed',icon:'Jio',color:'#eaeefa',counterparty:'biller'},
 {id:'PS1001',name:'Starbucks',handle:'Food & dining',amount:38000,type:'merchant',date:'2026-11-10T09:42:00+05:30',status:'Completed',icon:'★',color:'#e9f1e8',counterparty:'starbucks'}],journal:[],intents:[]}}
-export function view(s){return {balance:s.wallets.self,received:s.received,spent:s.spent,profile:s.profile,transactions:s.transactions,intents:s.intents,wallets:Object.entries(s.wallets).filter(([k])=>k!=='bank').map(([id,balance])=>({id,balance})),journal:s.journal}}
+export function view(s){return {bankAccounts:s.bankAccounts??[],balance:s.wallets.self,received:s.received,spent:s.spent,profile:s.profile,transactions:s.transactions,intents:s.intents,wallets:Object.entries(s.wallets).filter(([k])=>k!=='bank').map(([id,balance])=>({id,balance})),journal:s.journal}}
 export const validUpi=v=>typeof v==='string'&&/^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z][a-zA-Z0-9.\-]{1,63}$/.test(v);
 export function mutate(s,input,now=new Date()){
 const {type,name:raw,amount,key,code,method='wallet',originalId}=input;const name=typeof raw==='string'?raw.trim():'';
